@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afsmart</title>
+    <link rel="stylesheet" href="css/home.css">
+    <script defer src="js/home.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><a href="/">Afsmart</a></div>
+        <ul class="nav-links">
+            <li><a href="#">Giới thiệu</a></li>
+            <li><a href="#">Liên hệ</a></li>
+        </ul>
+        <ul class="nav-right">
+            <li><a id="login" href="#">Đăng nhập</a></li>
+            <li><a id="register" href="#">Đăng ký</a></li>
+        </ul>
+    </nav>
+
+    <div class="login-form-container" id="login-form">
+        <div class="login-form card shadow p-4">
+            <h3 class="mb-4 text-center">Đăng nhập</h3>
+            <input type="text" id="login-username" class="form-control mb-3" placeholder="Tài khoản">
+            <input type="password" id="login-password" class="form-control mb-3" placeholder="Mật khẩu">
+            <p id="login-error-message" class="text-center text-danger"></p>
+            <button id="submit-login-btn" class="btn btn-primary w-100 mb-3">Đăng nhập</button>
+            <hr>
+            <p class="text-question">Chưa có tài khoản?</p>
+            <button class="btn btn-secondary w-100" id="register-btn">Đăng ký</button> 
+            <button class="close-button btn btn-secondary w-100 mt-3">Đóng</button>
+        </div>
+    </div>
+
+    <div class="register-form-container" id="register-form">
+        <div class="register-form card shadow p-4">
+            <h3 class="mb-4 text-center">Đăng ký</h3>
+            <input type="text" id="fullname" class="form-control mb-3" placeholder="Họ và tên">
+            <input type="text" id="register-username" class="form-control mb-3" placeholder="Tài khoản">
+            <input type="password" id="register-password" class="form-control mb-3" placeholder="Mật khẩu">
+            <input type="password" id="confirm-password" class="form-control mb-3" placeholder="Nhập lại mật khẩu">
+            <input type="email" id="email" class="form-control mb-3" placeholder="Email">
+            <input type="text" id="phone" class="form-control mb-3" placeholder="Số điện thoại">
+            <p id="register-error-message" class="text-center text-danger"></p>
+            <button id="submit-register-btn" class="btn btn-primary w-100 mb-3">Đăng ký</button>
+            <hr>
+            <p class="text-question">Đã có tài khoản?</p>
+            <button class="btn btn-secondary w-100" id="login-btn">Đăng nhập</button> 
+            <button class="close-button btn btn-secondary w-100 mt-3">Đóng</button>
+        </div>
+    </div>
+
+    <header class="header">
+        <nav class="header-nav">
+            <a href="/">Trang chủ</a> 
+        </nav>
+    </header>
+    <section class="hero">
+        <h1>HỆ THỐNG GIÁM SÁT BÒ</h1>
+        <p>Hệ thống giám sát đàn bò của Afsmart giúp bạn tiết kiệm thời gian, cải thiện sức khỏe đàn bò và tăng doanh thu.</p>
+    </section>
+    <section class="content">
+        <div class="content-first">
+            <div class="device aficollar">
+                <img src="images/cow2.jpg" alt="AfiCollar">
+                <h2>AfiCollar</h2>
+                <p>Afimilk’s advanced Neck Collar for Cow Monitoring.</p>
+            </div>
+            <div class="device afiact">
+                <img src="images/cow3.jpg" alt="AfiAct II">
+                <h2>AfiAct II</h2>
+                <p>The Leading Leg Sensor for Cow Monitoring.</p>
+            </div>
+        </div>
+        <div class="content-second">
+            <div class="device aficam">
+                <img src="images/cow1.jpg" alt="AfiCam">
+                <h2>AfiCam</h2>
+                <p>Advanced Cow Monitoring Camera.</p>
+            </div>
+            <div class="device afifarm">
+                <img src="images/cow4.jpg" alt="Afifarm">
+                <h2>Afifarm</h2>
+                <p>Advanced Dairy Farm Management Software.</p>
+            </div>
+        </div>
+    </section>
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>International headquarters</h3>
+                <p>General: +972 74 706 8600</p>
+                <p>Email: market@afimilk.co.il</p>
+                <p>Address: Kibbutz Afikim, 1514800, Israel.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Stay Updated</h3>
+                <p>Get the latest farm knowledge</p>
+                <input type="email" placeholder="Email*">
+                <div>
+                    <input type="checkbox" id="consent">
+                    <label for="consent">I consent to Afimilk collecting my details.</label>
+                </div>
+                <button>Join Our Newsletter</button>
+            </div>
+        </div>
+        <p>&copy; 2022 Afimilk Ltd. | All Rights Reserved | <a href="#">Terms of use</a> | <a href="#">Privacy policy</a></p>
+    </footer>
+</body>
+</html>
