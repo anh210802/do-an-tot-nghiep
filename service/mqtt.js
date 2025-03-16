@@ -47,3 +47,8 @@
 //         await data.save();
 //         // console.log("Saved to MongoDB:", data);
 //     } catch (err) {
+//         console.error("Error processing MQTT data:", err.message);
+//     }
+// });
+
+// module.exports = mqttServer;
