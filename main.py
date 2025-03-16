@@ -9,29 +9,32 @@ import time
 
 load_dotenv()
 
-com_port = os.getenv("COM_PORT")
-baud_rate = os.getenv("BAUD_RATE")
-mqtt_broker = os.getenv("MQTT_BROKER")
-mqtt_port = os.getenv("MQTT_PORT")
-client_id = os.getenv("CLIENT_ID")
+COM_PORT = os.getenv("COM_PORT")
+BAUD_RATE = os.getenv("BAUD_RATE")
+MQTT_BROKER = os.getenv("MQTT_BROKER")
+MQTT_PORT = os.getenv("MQTT_PORT")
+CLIENT_ID = os.getenv("CLIENT_ID")
+TOPICS = [topic.strip() for topic in os.getenv("TOPICS", "").split(",")]
 
-if None in [com_port, baud_rate, mqtt_broker, mqtt_port, client_id]:
+if None in [COM_PORT, BAUD_RATE, MQTT_BROKER, MQTT_PORT, CLIENT_ID]:
     print("Error: Missing environment variables!")
     exit(1)
 
 scheduler = Scheduler()
 scheduler.SCH_Init()
 
-lora = LoRa(com_port, baud_rate)
+lora = LoRa(COM_PORT, BAUD_RATE)
 if not lora.openPort():
     print("Failed to open LoRa port!")
     exit(1)
 
-mqtt = MQTT(mqtt_broker, int(mqtt_port))
-mqtt.connect(client_id)
+mqtt = MQTT(MQTT_BROKER, int(MQTT_PORT))
+mqtt.connect(CLIENT_ID)
 
-topic = input("Enter topic: ").strip()
-mqtt.subscribe(topic)
+
+# Đăng ký các topic
+for topic in TOPICS:
+    mqtt.subscribe(topic)
 
 handleData = HandleData(lora, mqtt)
 

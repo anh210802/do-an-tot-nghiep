@@ -48,19 +48,32 @@ class LoRa:
     def read(self):
         try:
             if not self.serial or not self.serial.is_open:
-                print("Cannot read data: Serial port is not open")
+                print("⚠️ Cannot read data: Serial port is not open")
                 return None
 
-            bytesToRead = self.serial.inWaiting()
-            if bytesToRead > 0:
-                data = self.serial.read(bytesToRead).decode(errors="ignore").strip()
-                print(f"Data received from device: {data}")
+            # Đọc dữ liệu từ Serial
+            data = self.serial.readline().decode(errors="ignore").strip()
+            
+            if not data:
+                return None  # Không có dữ liệu thì bỏ qua
 
-                # Kiểm tra xem dữ liệu có đúng format không
-                if data and data.startswith("!") and data.endswith("#"):
-                    return data[1:-1]  # Bỏ ký tự '!' và '#'
+            print(f"📡 Received raw data: {data}")
 
-            return None  # Trả về None thay vì -1 để tránh lỗi kiểu dữ liệu
-        except Exception as e:
-            print(f"Cannot read data: {e}")
+            # Kiểm tra xem dữ liệu có đúng format không
+            if data.startswith("!") and data.endswith("#"):
+                payload = data[1:-1]  # Bỏ ký tự '!' và '#'
+
+                # Nếu là thông báo lỗi GPS, cảnh báo nhưng không xử lý
+                if payload == "Invalid GPS Data":
+                    print("⚠️ GPS error: Invalid GPS Data received. Skipping...")
+                    return None
+                
+                # Nếu là dữ liệu hợp lệ, trả về
+                return payload  
+
+            print("❌ Invalid data format. Skipping...")
             return None
+        except Exception as e:
+            print(f"❌ Error reading data: {e}")
+            return None
+
