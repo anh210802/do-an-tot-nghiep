@@ -6,7 +6,7 @@ from sklearn.utils import resample
 import joblib
 import os
 def train_model():
-    file_path = "PrivateTasks/trainnew.csv"
+    file_path = "PrivateTasks/trainnew2.csv"
     df = pd.read_csv(file_path).dropna()
 
     # Tăng số lượng mẫu của lớp "Lying"
@@ -38,6 +38,7 @@ def load_model():
 def predict_label(vedba: float, scay: float) -> str:
     """Dự đoán nhãn từ hai giá trị đầu vào."""
     model = load_model()  # Nạp mô hình
-    input_data = np.array([[vedba, scay]])  # Chuyển đổi đầu vào thành dạng mảng 2D
+    input_data = pd.DataFrame([[vedba, scay]], columns=["VeDBA", "SCAY"])
+    #input_data = np.array([[vedba, scay]])  # Chuyển đổi đầu vào thành dạng mảng 2D
     predicted_label = model.predict(input_data)[0]  # Dự đoán và lấy giá trị đầu ra đầu tiên
     return str(predicted_label)  # Trả về nhãn dưới dạng chuỗi

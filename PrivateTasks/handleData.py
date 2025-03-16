@@ -16,6 +16,7 @@ class HandleData:
         self.lora = lora
         self.mqtt = mqtt
         self.data_buffer = []
+        self.last_gps = None  # Lưu giá trị GPS cuối cùng
 
     def handle(self, topic):
         # Đọc dữ liệu từ LoRa
@@ -26,78 +27,86 @@ class HandleData:
             return
         
         if lora_data == "Invalid GPS Data":
-            print("Invalid GPS Data")
+            print("⚠ Invalid GPS Data")
             return
-        
-        else:
+
+        try:
             # Chia nhỏ dữ liệu
             lora_data = lora_data.split(":")
-
-            if len(lora_data) < 4:
-                print(f"Error: Incomplete LoRa data received: {lora_data}")
+            if lora_data[0] != "ID":
+                print("⚠ Error: Data format incorrect")
                 return
-            if lora_data[0] == "ID":
-                device_id = lora_data[1]
+
+            device_id = lora_data[1]
+
+            # Xử lý dữ liệu GPS
+            if lora_data[2] == "GPS":
+                longitude = lora_data[3]
+                latitude = lora_data[4]
+                current_gps = (longitude, latitude)
+
+                # Chỉ in GPS nếu nó thay đổi
+                if current_gps != self.last_gps:
+                    print(f"📍 Device {device_id} - New GPS: {longitude}, {latitude}")
+                    self.last_gps = current_gps  # Cập nhật tọa độ cuối
+
+            # Xử lý dữ liệu gia tốc
+            elif lora_data[2] == "Accx" and lora_data[4] == "Accy" and lora_data[6] == "Accz":
                 try:
                     AccX = float(lora_data[3])
                     AccY = float(lora_data[5])
                     AccZ = float(lora_data[7])
                 except ValueError:
-                    print(
-                        f"Error: Invalid acceleration data: {lora_data[3]}, {lora_data[5]}, {lora_data[7]}")
+                    print(f"⚠ Error: Invalid acceleration data: {lora_data[3]}, {lora_data[5]}, {lora_data[7]}")
                     return
-                # Lưu dữ liệu vào danh sách
+                
+                # Lưu dữ liệu vào buffer (chỉ giữ tối đa 10 giá trị gần nhất)
                 self.data_buffer.append({"AccX": AccX, "AccY": AccY, "AccZ": AccZ})
-
-                # Giới hạn danh sách chỉ chứa 10 phần tử gần nhất
                 if len(self.data_buffer) > 10:
                     self.data_buffer.pop(0)
-                VeDBA, SCAY = self.calculate_metrics()
-                state = models.predict_label(VeDBA, SCAY)
-                print(f"Predicted state: {state}")
 
-
-            current_time = time.strftime("%Y-%m-%dT%H:%M:%SZ")
-            # Kiểm tra dữ liệu GPS có hợp lệ không
-            if lora_data[2] == "GPS":
-                data_gps = lora_data[3].split(",")
-                try:
-                    longitude = float(data_gps[0])
-                    latitude = float(data_gps[1])
-                except ValueError:
-                    print(f"Error: Invalid GPS data: {data_gps[0]}, {data_gps[1]}")
+                # Đảm bảo đủ dữ liệu để tính toán
+                if len(self.data_buffer) < 10:
+                    print("⏳ Waiting for more data before processing...")
                     return
 
-            if lora_data[8] == "POWER":
-                powered = int(lora_data[9])
+                # Tính toán VeDBA và SCAY
+                VeDBA, SCAY = self.calculate_metrics()
+                print(f"📊 VeDBA: {VeDBA:.4f}, SCAY: {SCAY:.4f}")
 
+                # Dự đoán trạng thái
+                state = models.predict_label(VeDBA, SCAY)
+                print(f"🧠 Predicted state: {state}")
 
-            # Tạo đối tượng DATA
-            # data = DATA(device_id, current_time, longitude,
-            #             latitude, state, powered)
-            json_data = json.dumps(data.form_data())
+                # Kiểm tra trạng thái nguồn điện (POWER)
+                if len(lora_data) > 8 and lora_data[8] == "POWER":
+                    try:
+                        powered = int(lora_data[9])
+                        print(f"🔋 Power Status: {powered}")
+                    except ValueError:
+                        print("⚠ Error: Invalid POWER value")
 
-            # self.mqtt.send_data(topic, json_data)
-            print(f"Sent data: {json_data}")
+        except IndexError:
+            print("⚠ Error: Received incomplete data packet")
 
     def calculate_metrics(self):
+        """ Tính toán VeDBA và SCAY từ dữ liệu gia tốc """
+        if len(self.data_buffer) < 10:
+            return "Unknown", "Unknown"
+
         df = pd.DataFrame(self.data_buffer)
 
-        # Tính giá trị gia tốc tĩnh (trung bình)
+        # Tính vector gia tốc tổng hợp
+        df["acc_magnitude"] = np.sqrt(df["AccX"]**2 + df["AccY"]**2 + df["AccZ"]**2)
+        df["acc_magnitude"] = df["acc_magnitude"].replace(0, 1e-8)  # Tránh lỗi chia cho 0
+
+        # Tính SCAY
+        df["SCAY"] = 9.81 * (df["AccY"] / df["acc_magnitude"])
+
+        # Tính VeDBA bằng rolling mean
         df["AccX_static"] = df["AccX"].rolling(window=10, min_periods=1).mean()
         df["AccY_static"] = df["AccY"].rolling(window=10, min_periods=1).mean()
         df["AccZ_static"] = df["AccZ"].rolling(window=10, min_periods=1).mean()
+        df["VeDBA"] = abs(df["AccX"] - df["AccX_static"]) + abs(df["AccY"] - df["AccY_static"]) + abs(df["AccZ"] - df["AccZ_static"])
 
-        # Tính VeDBA
-        df["VeDBA"] = abs(df["AccX"] - df["AccX_static"]) + \
-            abs(df["AccY"] - df["AccY_static"]) + \
-            abs(df["AccZ"] - df["AccZ_static"])
-
-        # Tính SCAY theo công thức SCAY = 9.81 * AccY
-        df["SCAY"] = 9.81 * df["AccY"]
-
-        # Lấy giá trị VeDBA và SCAY của dữ liệu mới nhất
-        latest_VeDBA = df["VeDBA"].iloc[-1]
-        latest_SCAY = df["SCAY"].iloc[-1]
-
-        return latest_VeDBA, latest_SCAY
+        return df["VeDBA"].iloc[-1], df["SCAY"].iloc[-1]
