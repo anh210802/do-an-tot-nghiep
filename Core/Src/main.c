@@ -82,10 +82,12 @@ uint8_t		u8_flag_10ms = 0;
 #define BUFFER_SIZE 512
 char gpsBuffer[BUFFER_SIZE];
 char gpggaBuffer[BUFFER_SIZE];
+char gnvtgBuffer[BUFFER_SIZE];
 char outputBuffer[BUFFER_SIZE];
 //float latitude = 6.0, longitude = 6.0;
 float longitude = 0;  // Ví dụ giá trị kinh độ
 float latitude = 0;
+float velocity = 0.2;
 char id[6] = "010001";
 void sendTestMessage() {
     char testMessage[] = "!Test message#\r\n";
@@ -95,6 +97,20 @@ void sendTestMessage1() {
     char testMessage[] = "!aaaaaaaaaaaaa#\r\n";
     HAL_UART_Transmit(&huart1, (uint8_t*)testMessage, sizeof(testMessage), HAL_MAX_DELAY);
 }
+
+void filterGNVTG(const char* input) {
+    const char* gnvtgStart = strstr(input, "$GNVTG"); // Tìm câu $GPGGA
+    if (gnvtgStart != NULL) {
+        const char* gnvtgEnd = strstr(gnvtgStart, "\r\n"); // Tìm dấu kết thúc câu
+        if (gnvtgEnd != NULL) {
+            size_t gnvtgLength = gnvtgEnd - gnvtgStart + 2; // �?ộ dài câu $GPGGA
+            strncpy(gnvtgBuffer, gnvtgStart, gnvtgLength); // Sao chép câu $GPGGA
+            gnvtgBuffer[gnvtgLength] = '\0'; // Thêm ký tự kết thúc chuỗi
+        }
+    }
+}
+
+
 void filterGPGGA(const char* input) {
     const char* gpggaStart = strstr(input, "$GNGGA"); // Tìm câu $GPGGA
     if (gpggaStart != NULL) {
@@ -107,7 +123,30 @@ void filterGPGGA(const char* input) {
     }
 }
 
+void parseVData(char* nmea){
+	char* token;
+	token = strstr(nmea, "$GNVTG");
+	if (token != NULL){
+		token = strtok(token, ","); // B�? qua "$GNVTG"
+		token = strtok(NULL, ",");
+		token = strtok(NULL, ",");
+		token = strtok(NULL, ",");
+		token = strtok(NULL, ",");
+		token = strtok(NULL, ",");
+		token = strtok(NULL, ",");
 
+		if (token != NULL){
+			float speed = atof(token);
+			if (speed == 0) {
+				velocity = -1;
+			}else {
+			velocity = speed / 3.6f;
+			}
+		}
+	}
+
+
+}
 void parseGPSData(char* nmea) {
     char* token;
 
@@ -150,7 +189,7 @@ void parseGPSData(char* nmea) {
 void sendCoordinates() {
     if (latitude != 0.0 && longitude != 0.0) {
     	uint8_tToChar(id, id_device);
-        snprintf(outputBuffer, sizeof(outputBuffer), "!ID:%s:GPS:%.6f:%.6f#\r\n", id, longitude, latitude);
+        snprintf(outputBuffer, sizeof(outputBuffer), "!ID:%s:GPS:%.6f:%.6f:V:%.4f#\r\n", id, longitude, latitude,velocity);
         HAL_UART_Transmit_IT(&huart1, (uint8_t*)outputBuffer, strlen(outputBuffer));
     } else {
         snprintf(outputBuffer, sizeof(outputBuffer), "!Invalid GPS Data#\r\n");
@@ -178,6 +217,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART2) {
 		filterGPGGA(gpsBuffer);
 		parseGPSData(gpggaBuffer);
+
+		filterGNVTG(gpsBuffer);
+		parseVData(gnvtgBuffer);
 //		sendCoordinates();
 		HAL_UART_Receive_IT(&huart2, (uint8_t*)gpsBuffer, BUFFER_SIZE);
 	}
@@ -284,6 +326,7 @@ int main(void)
 		  if (u8_flag_10ms){
 			u8_flag_10ms = 0;
 			parseGPSData(gpggaBuffer);
+			parseVData(gnvtgBuffer);
 			sendCoordinates();
 		  }
 	  }
