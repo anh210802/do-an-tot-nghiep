@@ -1,0 +1,7 @@
+../Core/Src/global.c:41:6:onBuzzer	1
+../Core/Src/global.c:45:6:offBuzzer	1
+../Core/Src/global.c:49:6:toggleBuzzer	1
+../Core/Src/global.c:53:6:onLed	1
+../Core/Src/global.c:57:6:offLed	1
+../Core/Src/global.c:61:6:toggleLed	1
+../Core/Src/global.c:65:6:uint8_tToChar	2

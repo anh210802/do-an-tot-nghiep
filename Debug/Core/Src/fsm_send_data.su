@@ -1,0 +1,2 @@
+../Core/Src/fsm_send_data.c:10:6:send_data	1104	static
+../Core/Src/fsm_send_data.c:23:6:fsm_send_data	16	static

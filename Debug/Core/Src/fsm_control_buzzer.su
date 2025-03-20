@@ -1,0 +1,6 @@
+../Core/Src/fsm_control_buzzer.c:15:6:setToggle	8	static
+../Core/Src/fsm_control_buzzer.c:20:6:setDeviceID	16	static
+../Core/Src/fsm_control_buzzer.c:29:6:sendOn	16	static
+../Core/Src/fsm_control_buzzer.c:33:6:sendOff	16	static
+../Core/Src/fsm_control_buzzer.c:37:6:sendError	16	static
+../Core/Src/fsm_control_buzzer.c:41:6:fsm_control_buzzer	16	static
