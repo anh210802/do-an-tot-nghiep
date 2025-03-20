@@ -57,7 +57,7 @@ class LoRa:
             if not data:
                 return None  # Không có dữ liệu thì bỏ qua
 
-            print(f"Received raw data: {data}")
+            print(f"📡 Received raw data: {data}")
 
             # Kiểm tra xem dữ liệu có đúng format không
             if data.startswith("!") and data.endswith("#"):

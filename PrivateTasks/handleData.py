@@ -76,8 +76,6 @@ class HandleData:
 
                 # Dự đoán trạng thái
                 state = models.predict_label(VeDBA, SCAY)
-                if (state == "Feeding" and VeDBA < 0.2):
-                    state = "Lying"
                 print(f"🧠 Predicted state: {state}")
 
                 # Kiểm tra trạng thái nguồn điện (POWER)
