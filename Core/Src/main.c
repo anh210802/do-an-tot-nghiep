@@ -98,17 +98,17 @@ void sendTestMessage1() {
     HAL_UART_Transmit(&huart1, (uint8_t*)testMessage, sizeof(testMessage), HAL_MAX_DELAY);
 }
 
-void filterGNVTG(const char* input) {
-    const char* gnvtgStart = strstr(input, "$GNVTG"); // Tìm câu $GPGGA
-    if (gnvtgStart != NULL) {
-        const char* gnvtgEnd = strstr(gnvtgStart, "\r\n"); // Tìm dấu kết thúc câu
-        if (gnvtgEnd != NULL) {
-            size_t gnvtgLength = gnvtgEnd - gnvtgStart + 2; // �?ộ dài câu $GPGGA
-            strncpy(gnvtgBuffer, gnvtgStart, gnvtgLength); // Sao chép câu $GPGGA
-            gnvtgBuffer[gnvtgLength] = '\0'; // Thêm ký tự kết thúc chuỗi
-        }
-    }
-}
+//void filterGNVTG(const char* input) {
+//    const char* gnvtgStart = strstr(input, "$GNVTG"); // Tìm câu $GPGGA
+//    if (gnvtgStart != NULL) {
+//        const char* gnvtgEnd = strstr(gnvtgStart, "\r\n"); // Tìm dấu kết thúc câu
+//        if (gnvtgEnd != NULL) {
+//            size_t gnvtgLength = gnvtgEnd - gnvtgStart + 2; // �?ộ dài câu $GPGGA
+//            strncpy(gnvtgBuffer, gnvtgStart, gnvtgLength); // Sao chép câu $GPGGA
+//            gnvtgBuffer[gnvtgLength] = '\0'; // Thêm ký tự kết thúc chuỗi
+//        }
+//    }
+//}
 
 
 void filterGPGGA(const char* input) {
@@ -123,30 +123,30 @@ void filterGPGGA(const char* input) {
     }
 }
 
-void parseVData(char* nmea){
-	char* token;
-	token = strstr(nmea, "$GNVTG");
-	if (token != NULL){
-		token = strtok(token, ","); // B�? qua "$GNVTG"
-		token = strtok(NULL, ",");
-		token = strtok(NULL, ",");
-		token = strtok(NULL, ",");
-		token = strtok(NULL, ",");
-		token = strtok(NULL, ",");
-		token = strtok(NULL, ",");
-
-		if (token != NULL){
-			float speed = atof(token);
-			if (speed == 0) {
-				velocity = -1;
-			}else {
-			velocity = speed / 3.6f;
-			}
-		}
-	}
-
-
-}
+//void parseVData(char* nmea){
+//	char* token;
+//	token = strstr(nmea, "$GNVTG");
+//	if (token != NULL){
+//		token = strtok(token, ","); // B�? qua "$GNVTG"
+//		token = strtok(NULL, ",");
+//		token = strtok(NULL, ",");
+//		token = strtok(NULL, ",");
+//		token = strtok(NULL, ",");
+//		token = strtok(NULL, ",");
+//		token = strtok(NULL, ",");
+//
+//		if (token != NULL){
+//			float speed = atof(token);
+//			if (speed == 0) {
+//				velocity = -1;
+//			}else {
+//			velocity = speed / 3.6f;
+//			}
+//		}
+//	}
+//
+//
+//}
 void parseGPSData(char* nmea) {
     char* token;
 
@@ -218,8 +218,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		filterGPGGA(gpsBuffer);
 		parseGPSData(gpggaBuffer);
 
-		filterGNVTG(gpsBuffer);
-		parseVData(gnvtgBuffer);
+//		filterGNVTG(gpsBuffer);
+//		parseVData(gnvtgBuffer);
 //		sendCoordinates();
 		HAL_UART_Receive_IT(&huart2, (uint8_t*)gpsBuffer, BUFFER_SIZE);
 	}
@@ -326,7 +326,7 @@ int main(void)
 		  if (u8_flag_10ms){
 			u8_flag_10ms = 0;
 			parseGPSData(gpggaBuffer);
-			parseVData(gnvtgBuffer);
+//			parseVData(gnvtgBuffer);
 			sendCoordinates();
 		  }
 	  }

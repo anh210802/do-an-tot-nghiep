@@ -1,8 +1,6 @@
 ../Core/Src/main.c:92:6:sendTestMessage	1
 ../Core/Src/main.c:96:6:sendTestMessage1	1
-../Core/Src/main.c:101:6:filterGNVTG	3
 ../Core/Src/main.c:114:6:filterGPGGA	3
-../Core/Src/main.c:126:6:parseVData	4
 ../Core/Src/main.c:150:6:parseGPSData	8
 ../Core/Src/main.c:189:6:sendCoordinates	3
 ../Core/Src/main.c:201:6:HAL_UART_RxCpltCallback	5

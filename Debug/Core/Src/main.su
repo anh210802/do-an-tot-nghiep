@@ -1,8 +1,6 @@
 ../Core/Src/main.c:92:6:sendTestMessage	40	static
 ../Core/Src/main.c:96:6:sendTestMessage1	40	static
-../Core/Src/main.c:101:6:filterGNVTG	32	static
 ../Core/Src/main.c:114:6:filterGPGGA	32	static
-../Core/Src/main.c:126:6:parseVData	24	static
 ../Core/Src/main.c:150:6:parseGPSData	56	static
 ../Core/Src/main.c:189:6:sendCoordinates	48	static
 ../Core/Src/main.c:201:6:HAL_UART_RxCpltCallback	16	static
