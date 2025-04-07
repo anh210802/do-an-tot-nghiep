@@ -63,10 +63,10 @@ const Home = () => {
   };
 
   return (
-    <div>
+    <div className="flex flex-col min-h-screen bg-gray-50">
       {/* HEADER */}
       <nav className="bg-white text-blue-600 p-4 flex justify-between items-center shadow-md">
-        <div className="text-xl font-bold text-sky-500">
+        <div className="text-4xl font-bold text-sky-500">
           <Link to="/">SFarm</Link>
         </div>
         <ul className="flex space-x-2 text-sky-700 font-semibold text-lg">

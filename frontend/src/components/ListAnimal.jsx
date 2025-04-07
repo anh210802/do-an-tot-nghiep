@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { EyeIcon } from '@heroicons/react/outline'; // chỉ khi bạn đã cài heroicons
 
-// Sample data (replace with API call if needed)
 const sampleAnimalData = [
     { id: 1, name: "Ngọc", breed: "Bò sữa", age: "2 tuổi", status: "Khỏe mạnh", action: "Đứng", location: "Vị trí 1", deviceID: "123456", device_battery: "80%" },
     { id: 2, name: "Hà", breed: "Chó", age: "1 tuổi", status: "Khỏe mạnh", action: "Ngồi", location: "Vị trí 2", deviceID: "654321", device_battery: "60%" },
@@ -15,48 +15,57 @@ const sampleAnimalData = [
 const ListAnimal = ({ onSearch, searchTerm, setOnSearch }) => {
     const [animalList, setAnimalList] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    // States for animal details when clicked on an animal for detailed view
     const [selectedAnimal, setSelectedAnimal] = useState(null);
 
     useEffect(() => {
-        // Simulating an API call (or you can replace this with actual data fetching)
         setTimeout(() => {
             setAnimalList(sampleAnimalData);
             setLoading(false);
         }, 1000);
     }, []);
 
-    if (loading) {
-        return <div className="text-center">Loading...</div>;
-    }
-
     const filteredAnimals = animalList.filter((animal) =>
         animal.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Handle animal selection to show detailed view
     const handleSelectAnimal = (animal) => {
         setSelectedAnimal(animal);
-        setOnSearch(true); // Set onSearch to true to show the detailed view
+        setOnSearch(true);
     };
+
+    const handleDelete = () => {
+        const updatedList = animalList.filter((a) => a.id !== selectedAnimal.id);
+        setAnimalList(updatedList);
+        setSelectedAnimal(null);
+        setOnSearch(false);
+    };
+
+    if (loading) {
+        return <div className="text-center">Đang tải dữ liệu...</div>;
+    }
 
     return (
         <div>
             {!onSearch ? (
-                <div>
-                    <table className="min-w-full bg-white border border-gray-300 rounded-lg">
-                        <thead>
-                            <tr className="bg-sky-100">
-                                <th className="py-3 px-6 text-left font-semibold text-gray-700">Tên</th>
-                                <th className="py-3 px-6 text-left font-semibold text-gray-700">Giống</th>
-                                <th className="py-3 px-6 text-left font-semibold text-gray-700">Tuổi</th>
-                                <th className="py-3 px-6 text-left font-semibold text-gray-700">Trạng thái</th>
-                                <th className="py-3 px-6 text-left font-semibold text-gray-700">Hành động</th>
+                <table className="min-w-full bg-white border border-gray-300 rounded-lg">
+                    <thead>
+                        <tr className="bg-sky-100">
+                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Tên</th>
+                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Giống</th>
+                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Tuổi</th>
+                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Trạng thái</th>
+                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredAnimals.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="text-center py-4 text-gray-500">
+                                    Không tìm thấy động vật nào.
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {filteredAnimals.map((animal) => (
+                        ) : (
+                            filteredAnimals.map((animal) => (
                                 <tr key={animal.id} className="border-b hover:bg-gray-50">
                                     <td className="py-3 px-6">{animal.name}</td>
                                     <td className="py-3 px-6">{animal.breed}</td>
@@ -64,41 +73,61 @@ const ListAnimal = ({ onSearch, searchTerm, setOnSearch }) => {
                                     <td className="py-3 px-6">{animal.status}</td>
                                     <td className="py-3 px-6">
                                         <button
-                                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                            className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                                             onClick={() => handleSelectAnimal(animal)}
                                         >
+                                            <EyeIcon className="h-5 w-5" />
                                             Xem chi tiết
                                         </button>
                                     </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             ) : (
                 <div className="bg-white p-6 shadow-md rounded-lg overflow-hidden">
-                    <button
-                        className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-all mb-4"
-                        onClick={() => {
-                            setOnSearch(false); // Set onSearch to false to go back to the list
-                            setSelectedAnimal(null); // Clear the selected animal
-                        }}
-                    >
-                        Quay lại
-                    </button>
+                    <div className="space-x-2 mb-4">
+                        <button
+                            className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-all"
+                            onClick={() => {
+                                setOnSearch(false);
+                                setSelectedAnimal(null);
+                            }}
+                        >
+                            Quay lại
+                        </button>
+
+                        <button className="bg-amber-500 text-white px-5 py-2 rounded-lg hover:bg-amber-600 transition-all">
+                            Thay đổi
+                        </button>
+
+                        <button
+                            className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition-all"
+                            onClick={handleDelete}
+                        >
+                            Xóa
+                        </button>
+                    </div>
+
                     <h3 className="text-xl font-semibold mb-4">Thông tin động vật</h3>
+
                     {selectedAnimal && (
-                        
-                        <>
-                            <p className="text-lg font-semibold">Tên: {selectedAnimal.name}</p>
-                            <p className="text-lg font-semibold">Giống: {selectedAnimal.breed}</p>
-                            <p className="text-lg font-semibold">Tuổi: {selectedAnimal.age}</p>
-                            <p className="text-lg font-semibold">Trạng thái: {selectedAnimal.status}</p>
-                            <p className="text-lg font-semibold">Hành động: {selectedAnimal.action}</p>
-                            <p className="text-lg font-semibold">ID thiết bị: {selectedAnimal.deviceID}</p>
-                            <p className="text-lg font-semibold">Pin thiết bị: {selectedAnimal.device_battery}</p>
-                            <p className="text-lg font-semibold">Vị trí: {selectedAnimal.location}</p>
-                        </>
+                        <ul className="space-y-2 text-lg font-semibold">
+                            <li>Tên: {selectedAnimal.name}</li>
+                            <li>Giống: {selectedAnimal.breed}</li>
+                            <li>Tuổi: {selectedAnimal.age}</li>
+                            <li>Trạng thái: {selectedAnimal.status}</li>
+                            <li>Hành động: {selectedAnimal.action}</li>
+                            <li>ID thiết bị: {selectedAnimal.deviceID}</li>
+                            <li>
+                                Pin thiết bị: {selectedAnimal.device_battery}
+                                {parseInt(selectedAnimal.device_battery) < 20 && (
+                                    <span className="ml-2 text-red-500">⚠️ Yếu</span>
+                                )}
+                            </li>
+                            <li>Vị trí: {selectedAnimal.location}</li>
+                        </ul>
                     )}
                 </div>
             )}

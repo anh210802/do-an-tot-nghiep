@@ -6,8 +6,6 @@ import { handleLogout } from "../api/auth";
 import { createAxios } from "../createInstance";
 import { loginSuccess } from "../redux/authSlice";
 import Map from "./Map"; 
-
-// test
 import ListAnimal from "./ListAnimal";
 
 const Dashboard = () => {
@@ -20,24 +18,26 @@ const Dashboard = () => {
 
     const [searchTerm, setSearchTerm] = useState("");
     const [onSearch, setOnSearch] = useState(false);
+    const [openFormAdd, setOpenFormAdd] = useState(false);
 
 
     useEffect(() => {
         if (!request) {
             navigate("/"); 
         }
-    }, [dispatch, request, navigate]);
-
-    const logout = async () => {
-        handleLogout(dispatch, navigate, accessToken, axiosJWT);
-    };
-
-    const search = () => {
-        if (searchTerm) {
-            setOnSearch(true);
+    }, [request, navigate]);
+    
+    useEffect(() => {
+        if (searchTerm.trim() !== "") {
+            setOnSearch(false);
         } else {
             setOnSearch(false);
         }
+    }, [searchTerm]);
+    
+
+    const logout = async () => {
+        handleLogout(dispatch, navigate, accessToken, axiosJWT);
     };
 
     return (
@@ -83,21 +83,12 @@ const Dashboard = () => {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        {/* <button
-                            className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-all"
-                            onClick={search}
-                        >
-                            Tìm kiếm
-                        </button> */}
                     </div>
                     <div className="flex space-x-4">
-                        <button className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-all">Thêm động vật</button>
-                        {onSearch && (
-                            <div className="flex space-x-4">
-                                <button className="bg-yellow-600 text-white px-5 py-2 rounded-lg hover:bg-yellow-700 transition-all">Cập nhật thông tin</button>
-                                <button className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition-all">Xóa động vật</button>
-                            </div>
-                        )}
+                        <button 
+                            className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-all"
+                            onClick={() => setOpenFormAdd(true)}
+                        >Thêm động vật</button>
                     </div>
                 </div>
             </div>
@@ -114,39 +105,29 @@ const Dashboard = () => {
                 <div className="w-1/2 bg-white p-6 shadow-md rounded-lg overflow-hidden">
                     <ListAnimal onSearch={onSearch} searchTerm={searchTerm} setOnSearch={setOnSearch} />
                 </div>
-                
-                {/* {!onSearch ? (
-                    <div className="w-1/2 bg-white p-6 shadow-md rounded-lg overflow-hidden">
-                        <h3 className="text-xl font-semibold mb-4 text-sky-700">Danh sách động vật</h3>
-                        <ListAnimal onSearch={onSearch} searchTerm={searchTerm} />
-                    </div>
-                ) : (
-                    <div className="w-1/2 bg-white p-6 shadow-md rounded-lg overflow-hidden">
-                        <button
-                            className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-all mb-4"
-                            onClick={() => {
-                                setOnSearch(false);
-                                setSearchTerm("");
-                            }}
-                            
-                        >
-                            <ChevronLeftIcon className="h-5 w-5 mr-2" />
-                        </button>
-                        <h3 className="text-xl font-semibold mb-4">Thông tin động vật</h3>
-                        <div className="bg-gray-100 p-4 rounded-lg shadow-md">
-                            <p className="text-lg font-semibold">Tên: {nameAnimal}</p>
-                            <p className="text-lg font-semibold">Giống: {breedAnimal}</p>
-                            <p className="text-lg font-semibold">Tuổi: {ageAnimal}</p>
-                            <p className="text-lg font-semibold">Trạng thái: {statusAnimal}</p>
-                            <p className="text-lg font-semibold">Vị trí: {locationAnimal}</p>
-                            <div className="flex space-x-4 mt-4">
-                                <button className="bg-yellow-600 text-white px-5 py-2 rounded-lg hover:bg-yellow-700 transition-all">Cập nhật</button>
-                                <button className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition-all">Xóa</button>
-                            </div>
-                        </div>
-                    </div>
-                )} */}
             </main>
+
+            {openFormAdd && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                    onClick={() => setOpenFormAdd(false)}
+                >
+                    <div
+                        className="bg-white p-6 rounded-lg shadow-lg w-96 z-60 relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 className="text-xl font-bold text-blue-600 text-center">Thêm động vật</h2>
+                        {/* Form to add animal */}
+                        <button
+                            onClick={() => setOpenFormAdd(false)}
+                            className="w-full bg-red-500 text-white p-2 rounded mt-3"
+                        >
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            )}
+
 
             {/* FOOTER */}
             <footer className="bg-gray-800 text-white p-6 text-center">
