@@ -88,6 +88,7 @@ const ListAnimal = ({ onSearch, searchTerm, setOnSearch }) => {
                     </button>
                     <h3 className="text-xl font-semibold mb-4">Thông tin động vật</h3>
                     {selectedAnimal && (
+                        
                         <>
                             <p className="text-lg font-semibold">Tên: {selectedAnimal.name}</p>
                             <p className="text-lg font-semibold">Giống: {selectedAnimal.breed}</p>
