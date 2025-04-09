@@ -27,7 +27,7 @@ const authController = {
                 key,
             });
     
-            return res.json({ message: 'User created successfully', user });
+            return res.status(200).json({ message: 'User created successfully', user });
         } catch (err) {
             res.status(400).json({ message: err.message });
         }
@@ -79,7 +79,7 @@ const authController = {
             if (user && validPassword) {
                 const accessToken = authController.generateAccessToken(user);
                 const refreshToken = authController.generateRefreshToken(user);
-                // refreshTokens.push(refreshToken);
+                refreshTokens.push(refreshToken);
                 res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
                     secure: false,
@@ -119,7 +119,7 @@ const authController = {
             refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
             const newAccessToken = authController.generateAccessToken(user);
             const newRefreshToken = authController.generateRefreshToken(user);
-            // refreshTokens.push(newRefreshToken);
+            refreshTokens.push(newRefreshToken);
         });
         res.cookie("refreshToken", newRefreshToken, {
             httpOnly: true,
@@ -137,7 +137,6 @@ const authController = {
     // Logout the current user
     logoutUser: (req, res) => {
         try {
-            console.log(req.cookies);
             // Check if the request has a refresh token
             const refreshToken = req.cookies.refreshToken;  // Get refresh token from cookies
             

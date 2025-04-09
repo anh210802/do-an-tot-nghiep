@@ -6,7 +6,7 @@ const morgan = require("morgan");
 const MongoStore = require("connect-mongo");
 const mqttServer = require("./service/mqtt");
 const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
+const handleCowRoutes = require("./routes/handleCowRoutes");
 const cookieParser = require('cookie-parser');
 
 const HOST = process.env.HOST || "0.0.0.0";
@@ -46,13 +46,11 @@ app.use(express.json());
 // Cấu hình Session
 app.set("trust proxy", 1); // Nếu chạy trên production với proxy
 app.use(cookieParser(
-    SECRET_KEY,
-    { httpOnly: true, secure: NODE_ENV === "production", sameSite: "strict" } // Cấu hình cookie
 ));
 
 // Định tuyến API
 app.use("/auth", authRoutes);
-app.use("/users", userRoutes);
+app.use("/handle-cow", handleCowRoutes);
 
 // Khởi động HTTP Server
 app.listen(PORT, HOST, () => {

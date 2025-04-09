@@ -6,16 +6,19 @@ import { useDispatch } from "react-redux";
 const Home = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [agree, setAgree] = useState(false);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [userRegister, setUserRegister] = useState(false);
   const [error, setError] = useState("");
+  const [successful, setSuccessful] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+
   
   // Xử lý đăng nhập
   const login = (e) => {
@@ -29,7 +32,7 @@ const Home = () => {
         username: username,
         password: password,
       };
-      handleLogin(newUser, dispatch, navigate);
+      handleLogin(newUser, dispatch, navigate, setError);
     } catch (error) {
       console.error("Login failed:", error.message);
       setError(error.message || "Đăng nhập thất bại!");
@@ -39,12 +42,31 @@ const Home = () => {
   // Xử lý đăng ký
   const register = (e) => {
     e.preventDefault();
+    // Kiểm tra thông tin đăng ký
+    setError("");
+    setSuccessful(false);
+    if (name.length < 2) {
+      setError("Tên người dùng phải có ít nhất 6 ký tự!");
+      return;
+    }
+    if (username.length < 6) {
+      setError("Tài khoản phải có ít nhất 6 ký tự!");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự!");
+      return;
+    }
     if (!name || !username || !password || !confirmPassword) {
       setError("Vui lòng điền đầy đủ thông tin!");
       return;
     }
     if (password !== confirmPassword) {
       setError("Mật khẩu nhập lại không khớp!");
+      return;
+    }
+    if (!agree) {
+      setError("Vui lòng đồng ý với điều khoản sử dụng!");
       return;
     }
     try {
@@ -55,10 +77,11 @@ const Home = () => {
         email: email,
         phone: phone,
       }
-      handleRegister(newUser, dispatch, navigate);
-      setUserRegister(true);
+      handleRegister(newUser, dispatch, navigate, setError);
+      setSuccessful(true);
     } catch (error) {
       setError(error.message);
+      console.error("Register failed:", error.message);
     }
   };
 
@@ -104,48 +127,245 @@ const Home = () => {
 
       {/* MODAL ĐĂNG NHẬP */}
       {isLoginOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setIsLoginOpen(false)}>
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl font-bold text-blue-600 text-center">Đăng nhập</h2>
-            <input value={username} onChange={(e) => setUsername(e.target.value)} type="text" placeholder="Tài khoản" className="w-full p-2 border rounded mt-3" />
-            <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Mật khẩu" className="w-full p-2 border rounded mt-3" />
-            {error && <p className="text-red-500 text-center mt-2">{error}</p>}
-            <button onClick={login} className="w-full bg-blue-600 text-white p-2 rounded mt-3">Đăng nhập</button>
-            <p className="text-center mt-3">Chưa có tài khoản? 
-              <button onClick={() => { setIsLoginOpen(false); setIsRegisterOpen(true); setError("");}} className="text-blue-500 ml-2">Đăng ký</button>
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50"
+          onClick={() => setIsLoginOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">
+              Đăng nhập
+            </h2>
+
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                <span className="block text-sm">{error}</span>
+              </div>
+            )}
+
+            <p className="text-center text-gray-600 mb-6">
+              Vui lòng nhập tài khoản và mật khẩu để tiếp tục.
             </p>
-            <button onClick={() => {setIsLoginOpen(false); setError("");}} className="w-full bg-red-500 text-white p-2 rounded mt-3">Đóng</button>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tài khoản</label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                type="text"
+                placeholder="Nhập tài khoản"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                placeholder="Nhập mật khẩu"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <button
+              onClick={login}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition duration-200"
+            >
+              Đăng nhập
+            </button>
+
+            <div className="text-center mt-4 text-sm text-gray-600">
+              Chưa có tài khoản?
+              <button
+                onClick={() => {
+                  setIsLoginOpen(false);
+                  setIsRegisterOpen(true);
+                  setError("");
+                }}
+                className="text-blue-500 hover:underline ml-1"
+              >
+                Đăng ký
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                setIsLoginOpen(false);
+                setError("");
+              }}
+              className="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg font-medium transition duration-200"
+            >
+              Đóng
+            </button>
           </div>
         </div>
       )}
+
 
       {/* MODAL ĐĂNG KÝ */}
       {isRegisterOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setIsRegisterOpen(false)}>
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl font-bold text-blue-600 text-center">Đăng ký</h2>
-            <input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Tên người dùng" className="w-full p-2 border rounded mt-3" />
-            <input value={username} onChange={(e) => setUsername(e.target.value)} type="text" placeholder="Tài khoản" className="w-full p-2 border rounded mt-3" />
-            <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Mật khẩu" className="w-full p-2 border rounded mt-3" />
-            <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" placeholder="Nhập lại mật khẩu" className="w-full p-2 border rounded mt-3" />
-            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" className="w-full p-2 border rounded mt-3" />
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} type="text" placeholder="Số điện thoại" className="w-full p-2 border rounded mt-3" />
-            {error && <p className="text-red-500 text-center mt-2">{error}</p>}
-            <button onClick={register} className="w-full bg-blue-600 text-white p-2 rounded mt-3">Đăng ký</button>
-            <p className="text-center mt-3">Đã có tài khoản? 
-              <button onClick={() => { setIsRegisterOpen(false); setIsLoginOpen(true); setError("");}} className="text-blue-500 ml-2">Đăng nhập</button>
-            </p>
-            <button onClick={() => {setIsRegisterOpen(false); setError("");}} className="w-full bg-red-500 text-white p-2 rounded mt-3">Đóng</button>
-          </div>
-        </div>
-      )}
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50"
+          onClick={() => setIsRegisterOpen(false)}
+        >
+          <div
+            className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
 
-      {/* Thông báo đăng ký thành công */}
-      {userRegister && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-            <h2 className="text-xl font-bold text-blue-600">Đăng ký thành công!</h2>
-            <button onClick={() => {setUserRegister(false); setError("");}} className="w-full bg-blue-600 text-white p-2 rounded mt-3">Đóng</button>
+            <h2 className="text-xl font-bold text-center text-blue-600 mb-2">
+              Đăng ký
+            </h2>
+
+            <p className="text-center text-gray-600 mb-4 text-sm">
+              Vui lòng nhập thông tin có dấu <span className="text-red-500">*</span> để tạo tài khoản mới.
+            </p>
+
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-4 text-sm" role="alert">
+                {error}
+              </div>
+            )}
+
+            {!error && successful && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded mb-4 text-sm" role="alert">
+                Đăng ký thành công! Vui lòng đăng nhập.
+              </div>
+            )}
+              {/* Tên người dùng */}
+              <div>
+                <label className="font-medium text-gray-700">
+                  Tên người dùng <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  type="text"
+                  placeholder="Nhập tên người dùng"
+                  className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Tài khoản */}
+              <div>
+                <label className="font-medium text-gray-700">
+                  Tài khoản <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  type="text"
+                  placeholder="Nhập tài khoản của bạn có ít nhất 6 ký tự"
+                  className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Mật khẩu */}
+              <div>
+                <label className="font-medium text-gray-700">
+                  Mật khẩu <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type="password"
+                  placeholder="Nhập mật khẩu của bạn có ít nhất 6 ký tự"
+                  className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Nhập lại mật khẩu */}
+              <div>
+                <label className="font-medium text-gray-700">
+                  Nhập lại mật khẩu <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  type="password"
+                  placeholder="Nhập lại mật khẩu"
+                  className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="font-medium text-gray-700">Email</label>
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  placeholder="Email"
+                  className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Số điện thoại */}
+              <div>
+                <label className="font-medium text-gray-700">Số điện thoại</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  type="text"
+                  placeholder="Số điện thoại"
+                  className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Checkbox điều khoản */}
+              <div className="flex items-center mt-4">
+                <input
+                  type="checkbox"
+                  checked={agree}
+                  onChange={() => setAgree(!agree)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label className="ml-2 text-sm text-gray-600">
+                  Tôi đồng ý với{" "}
+                  <Link to="/terms" className="text-blue-500 hover:underline">
+                    điều khoản sử dụng
+                  </Link>
+                </label>
+            </div>
+
+            {/* Nút đăng ký */}
+            <button
+              onClick={register}
+              className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition duration-200"
+            >
+              Đăng ký
+            </button>
+
+            {/* Chuyển sang đăng nhập */}
+            <div className="text-center mt-3 text-sm text-gray-600">
+              Đã có tài khoản?
+              <button
+                onClick={() => {
+                  setIsRegisterOpen(false);
+                  setIsLoginOpen(true);
+                  setError("");
+                }}
+                className="text-blue-500 hover:underline ml-1"
+              >
+                Đăng nhập
+              </button>
+            </div>
+
+            {/* Nút đóng */}
+            <button
+              onClick={() => {
+                setIsRegisterOpen(false);
+                setError("");
+              }}
+              className="w-full mt-3 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg font-medium transition duration-200"
+            >
+              Đóng
+            </button>
           </div>
         </div>
       )}

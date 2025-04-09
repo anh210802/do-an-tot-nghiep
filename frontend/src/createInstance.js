@@ -6,7 +6,11 @@ const API_URL = import.meta.env?.VITE_API_URL || "http://localhost:8080";
 // Function to refresh the token
 export const refreshToken = async () => {
     try {
-        const res = await axios.post(`${API_URL}/auth/refresh-token`, { withCredentials: true });
+        const res = await axios.post(
+            `${API_URL}/auth/refresh-token`,
+            {}, // <- body rỗng
+            { withCredentials: true } // <- đặt đúng chỗ
+        );
         return res.data;
     } catch (error) {
         console.error("Error refreshing token:", error.response?.data || error.message);
@@ -14,9 +18,13 @@ export const refreshToken = async () => {
     }
 };
 
+
 // Function to create a new Axios instance with interceptors for handling token refresh
 export const createAxios = (user, dispatch, stateSuccess) => {
-    const newInstance = axios.create();
+    const newInstance = axios.create({
+        baseURL: API_URL,
+        withCredentials: true, // <- đảm bảo gửi cookie trong mọi request
+    });
     
     // Interceptor to check token expiry before each request
     newInstance.interceptors.request.use(

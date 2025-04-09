@@ -16,6 +16,7 @@ const ListAnimal = ({ onSearch, searchTerm, setOnSearch }) => {
     const [animalList, setAnimalList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedAnimal, setSelectedAnimal] = useState(null);
+    const [openFixInfoAnimal, setOpenFixInfoAnimal] = useState(null);
 
     useEffect(() => {
         setTimeout(() => {
@@ -31,6 +32,7 @@ const ListAnimal = ({ onSearch, searchTerm, setOnSearch }) => {
     const handleSelectAnimal = (animal) => {
         setSelectedAnimal(animal);
         setOnSearch(true);
+        setOpenFixInfoAnimal(false);
     };
 
     const handleDelete = () => {
@@ -98,7 +100,12 @@ const ListAnimal = ({ onSearch, searchTerm, setOnSearch }) => {
                             Quay lại
                         </button>
 
-                        <button className="bg-amber-500 text-white px-5 py-2 rounded-lg hover:bg-amber-600 transition-all">
+                        <button 
+                            className="bg-amber-500 text-white px-5 py-2 rounded-lg hover:bg-amber-600 transition-all"
+                            onClick={() => {
+                                setOpenFixInfoAnimal(true);
+                            }}
+                        >
                             Thay đổi
                         </button>
 
@@ -129,6 +136,46 @@ const ListAnimal = ({ onSearch, searchTerm, setOnSearch }) => {
                             <li>Vị trí: {selectedAnimal.location}</li>
                         </ul>
                     )}
+
+                    {openFixInfoAnimal && (
+                        <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+                            <h4 className="text-lg font-semibold mb-2">Thay đổi thông tin động vật</h4>
+                            <form className="space-y-2">
+                                <input
+                                    type="text"
+                                    placeholder="Tên động vật"
+                                    className="border border-gray-300 rounded px-4 py-2 w-full"
+                                    defaultValue={selectedAnimal.name}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Giống động vật"
+                                    className="border border-gray-300 rounded px-4 py-2 w-full"
+                                    defaultValue={selectedAnimal.breed}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Tuổi động vật"
+                                    className="border border-gray-300 rounded px-4 py-2 w-full"
+                                    defaultValue={selectedAnimal.age}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Trạng thái động vật"
+                                    className="border border-gray-300 rounded px-4 py-2 w-full"
+                                    defaultValue={selectedAnimal.status}
+                                />
+                            </form>
+                            <div className="mt-4 flex justify-end">
+                                <button
+                                    className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-all"
+                                    onClick={() => setOpenFixInfoAnimal(false)}
+                                >
+                                    Lưu thay đổi
+                                </button>
+                            </div>
+                        </div>
+                    )}     
                 </div>
             )}
         </div>
