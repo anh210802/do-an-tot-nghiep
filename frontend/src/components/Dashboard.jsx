@@ -22,14 +22,13 @@ const Dashboard = () => {
     const [onSearch, setOnSearch] = useState(false);
     const [openFormAdd, setOpenFormAdd] = useState(false);
     const [error, setError] = useState("");
-    const [successful, setSuccessful] = useState("");
+    const [successful, setSuccessful] = useState(false);
 
     const [nameCow, setNameCow] = useState("");
     const [breedCow, setBreedCow] = useState("");
     const [birthDateCow, setBirthDateCow] = useState("");
     const [weightCow, setWeightCow] = useState("");
     const [genderCow, setGenderCow] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
     
     useEffect(() => {
         setOnSearch(false);
@@ -44,9 +43,9 @@ const Dashboard = () => {
 
     const addAnimal = async (e) => {
         e.preventDefault();
-        if (!nameCow && !breedCow && !birthDateCow && !weightCow && !genderCow) {
-            setError("Vui lòng điền đầy đủ thông tin!");
-            setSuccessful(false);
+        setSuccessful(false);
+        if (!nameCow) {
+            setError("Tên động vật không được để trống!");
             return;
         }
         try {
@@ -57,22 +56,17 @@ const Dashboard = () => {
                 weightCow: parseFloat(weightCow),
                 genderCow: genderCow,
             };
-            setIsLoading(true);
-            setError("");
-            const res = await handleAddCow(newAnimal, accessToken, axiosJWT, dispatch);
+            const res = await handleAddCow(newAnimal, accessToken, axiosJWT, dispatch, setError);
             if (res) {
-                setIsLoading(false);
-                setOpenFormAdd(false);
                 setNameCow("");
                 setBreedCow("");
                 setBirthDateCow("");
                 setWeightCow("");
                 setGenderCow("");
-                setSuccessful("Thêm động vật thành công!");
-                setError(false);
+                setSuccessful(true);
+                setError("");
             }
         } catch (error) {
-            setIsLoading(false);
             setSuccessful(false);
             setError(error.message || "Thêm động vật thất bại!");
             console.error("Add animal error:", error.message);
@@ -80,16 +74,18 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="flex flex-col min-h-screen bg-gray-100">
             {/* NAVIGATION */}
-            <nav className="bg-white shadow-lg p-5 flex justify-between items-center border-b border-gray-300">
-                <div className="text-4xl font-extrabold text-sky-600">
+            <nav className="bg-white text-blue-600 p-4 flex justify-between items-center shadow-md">
+                <div className="text-4xl font-bold text-sky-500">
                     <Link to="/dashboard">SFarm</Link>
                 </div>
-                <ul className="flex space-x-6 text-lg font-medium text-sky-600">
-                    <li><Link to="/dashboard" className="hover:text-blue-500">Trang chủ</Link></li>
-                    <li><Link to="/dashboard" className="hover:text-blue-500">Giới thiệu</Link></li>
-                    <li><Link to="/dashboard" className="hover:text-blue-500">Liên hệ</Link></li>
+                <ul className="flex space-x-2 text-sky-700 font-semibold text-lg">
+                    <Link to="/dashboard" className="hover:text-gray-400">Trang chủ</Link>
+                    <span>|</span>
+                    <Link to="/dashboard" className="hover:text-gray-400">Giới thiệu</Link>
+                    <span>|</span>
+                    <Link to="/dashboard" className="hover:text-gray-400">Liên hệ</Link>
                 </ul>
                 <div className="flex space-x-4 items-center">
                     {request && (
@@ -98,7 +94,7 @@ const Dashboard = () => {
                         </p>
                     )}
                     <button
-                        className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition-all"
+                        className="border border-red-500 text-red-500 px-4 py-2 rounded hover:bg-red-500 hover:text-white"
                         onClick={logout}
                     >
                         Đăng xuất
@@ -141,106 +137,137 @@ const Dashboard = () => {
                 </div>
 
                 {/* ANIMAL LIST OR DETAILS */}
-                <div className="w-1/2 bg-white p-6 shadow-md rounded-lg overflow-hidden">
-                    <ListAnimal onSearch={onSearch} searchTerm={searchTerm} setOnSearch={setOnSearch} />
+                <div className="w-1/2 bg-white p-6 shadow-md rounded-lg overflow-hidden overflow-y-auto max-h-[900px]">
+                    <ListAnimal
+                        accessToken={accessToken}
+                        axiosJWT={axiosJWT}
+                        dispatch={dispatch}
+                        onSearch={onSearch}
+                        searchTerm={searchTerm}
+                        setOnSearch={setOnSearch}
+                    ></ListAnimal>
                 </div>
             </main>
 
             {/*MODEL THÊM ĐỘNG VẬT*/}
             {openFormAdd && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                    className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50"
                     onClick={() => setOpenFormAdd(false)}
                 >
                     <div
-                        className="bg-white p-6 rounded-lg shadow-lg w-96 z-60 relative"
-                        onClick={(e) => {e.stopPropagation(); e.setError(""); e.setSuccessful("");}}
+                    className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setSuccessful(false);
+                    }}
                     >
-                        <h2 className="text-xl font-bold text-blue-600 text-center">Thêm động vật</h2>
-                        <p className="text-center text-gray-500 mb-4">Nhập thông tin động vật</p>
-                        {/* Form to add animal */}
-                        {isLoading && (
-                            <div className="flex justify-center items-center mb-4">
-                                <svg className="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4.93 4.93a10 10 0 0 1 14.14 14.14A10 10 0 0 1 4.93 4.93z"></path>
-                                </svg>
-                            </div>
-                        )}
-                        {isLoading && <p className="text-center text-gray-500 mb-4">Đang xử lý...</p>}
-                        {!isLoading && successful && (
-                            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                                <span className="block sm:inline">{successful}</span>
-                            </div>
-                        )
-}
-                        {successful && (
-                            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                                <span className="block sm:inline">{successful}</span>
-                            </div>
-                        )}
-                        {error && (
-                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                                <span className="block sm:inline">{error}</span>
-                            </div>
-                        )}
+                    <h2 className="text-xl font-bold text-center text-blue-600 mb-2">Thêm động vật</h2>
+                    <p className="text-center text-gray-600 mb-4 text-sm">
+                        Vui lòng điền đầy đủ thông tin động vật cần thêm.
+                    </p>
+
+                    {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-4 text-sm" role="alert">
+                        {error}
+                        </div>
+                    )}
+
+                    {!error && successful && (
+                        <div className="bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded mb-4 text-sm" role="alert">
+                        Thêm động vật thành công!
+                        </div>
+                    )}
+
+                    {/* Tên động vật */}
+                    <div>
+                        <label className="font-medium text-gray-700">Tên động vật <span className="text-red-500">*</span></label>
                         <input
-                            value={nameCow}
-                            onChange={(e) => setNameCow(e.target.value)}
-                            type="text"
-                            placeholder="Tên động vật"
-                            className="w-full p-2 border rounded mt-3"
+                        value={nameCow}
+                        onChange={(e) => setNameCow(e.target.value)}
+                        type="text"
+                        placeholder="Nhập tên động vật"
+                        className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                    </div>
+
+                    {/* Giống loài */}
+                    <div className="mt-3">
+                        <label className="font-medium text-gray-700">Giống loài </label>
                         <input
-                            value={breedCow}
-                            onChange={(e) => setBreedCow(e.target.value)}
-                            type="text"
-                            placeholder="Giống loài"
-                            className="w-full p-2 border rounded mt-3"
+                        value={breedCow}
+                        onChange={(e) => setBreedCow(e.target.value)}
+                        type="text"
+                        placeholder="Nhập giống loài"
+                        className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                    </div>
+
+                    {/* Ngày sinh */}
+                    <div className="mt-3">
+                        <label className="font-medium text-gray-700">Ngày sinh </label>
                         <input
-                            value={birthDateCow}
-                            onChange={(e) => setBirthDateCow(e.target.value)}
-                            type="date"
-                            placeholder="Ngày sinh"
-                            className="w-full p-2 border rounded mt-3"
+                        value={birthDateCow}
+                        onChange={(e) => setBirthDateCow(e.target.value)}
+                        type="date"
+                        className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                    </div>
+
+                    {/* Cân nặng */}
+                    <div className="mt-3">
+                        <label className="font-medium text-gray-700">Cân nặng (kg) </label>
                         <input
-                            value={weightCow}
-                            onChange={(e) => setWeightCow(e.target.value)}
-                            type="number"
-                            placeholder="Cân nặng (kg)"
-                            className="w-full p-2 border rounded mt-3"
+                        value={weightCow}
+                        onChange={(e) => setWeightCow(e.target.value)}
+                        type="number"
+                        placeholder="Nhập cân nặng"
+                        className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                    </div>
+
+                    {/* Giới tính */}
+                    <div className="mt-3">
+                        <label className="font-medium text-gray-700">Giới tính </label>
                         <select
-                            value={genderCow}
-                            onChange={(e) => setGenderCow(e.target.value)}
-                            className="w-full p-2 border rounded mt-3"
+                        value={genderCow}
+                        onChange={(e) => setGenderCow(e.target.value)}
+                        className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                            <option value="">Chọn giới tính</option>
-                            <option value="M">Đực</option>
-                            <option value="F">Cái</option>
+                        <option value="">Chọn giới tính</option>
+                        <option value="M">Đực</option>
+                        <option value="F">Cái</option>
                         </select>
-                        <button
-                            onClick={addAnimal}
-                            className="w-full bg-blue-600 text-white p-2 rounded mt-3"
-                        >
-                            Thêm động vật
-                        </button>
-                        <button
-                            onClick={() => {setOpenFormAdd(false); setError(""); setSuccessful("");}}
-                            className="w-full bg-red-500 text-white p-2 rounded mt-3"
-                        >
-                            Đóng
-                        </button>
+                    </div>
+
+                    {/* Nút thêm */}
+                    <button
+                        onClick={addAnimal}
+                        className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition duration-200"
+                    >
+                        Thêm động vật
+                    </button>
+
+                    {/* Nút đóng */}
+                    <button
+                        onClick={() => {
+                        setOpenFormAdd(false);
+                        setError("");
+                        setSuccessful("");
+                        }}
+                        className="w-full mt-3 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg font-medium transition duration-200"
+                    >
+                        Đóng
+                    </button>
                     </div>
                 </div>
-            )}
+                )}
+
 
 
             {/* FOOTER */}
             <footer className="bg-gray-800 text-white p-6 text-center">
-                <p>&copy; 2024 Afsmart. All rights reserved.</p>
+                <p>&copy; 2025 SFARM. All rights reserved.</p>
             </footer>
         </div>
     );

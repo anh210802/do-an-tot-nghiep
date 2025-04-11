@@ -1,7 +1,8 @@
-import { useState} from "react";
+import { useState, useEffect} from "react";
 import { handleLogin, handleRegister} from "../api/auth"; 
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 
 const Home = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -18,7 +19,12 @@ const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-
+  const request = useSelector((state) => state.auth.login?.currentUser);
+  useEffect(() => {
+      if (request) {
+          navigate("/dashboard"); 
+      }
+  }, [request, navigate]);
   
   // Xử lý đăng nhập
   const login = (e) => {
@@ -86,7 +92,7 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-100">
       {/* HEADER */}
       <nav className="bg-white text-blue-600 p-4 flex justify-between items-center shadow-md">
         <div className="text-4xl font-bold text-sky-500">
@@ -119,11 +125,6 @@ const Home = () => {
           <p className="mt-4">Đăng nhập để bắt đầu sử dụng!</p>
         </div>
       </main>
-
-      {/* FOOTER */}
-      <footer className="bg-gray-800 text-white p-4 w-full text-center">
-        <p>&copy; 2024 Afsmart. All rights reserved.</p>
-      </footer>
 
       {/* MODAL ĐĂNG NHẬP */}
       {isLoginOpen && (
@@ -336,11 +337,13 @@ const Home = () => {
             {/* Nút đăng ký */}
             <button
               onClick={register}
-              className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition duration-200"
+              disabled={!agree}
+              className={`w-full mt-5 py-2 rounded-lg font-semibold transition duration-200 ${
+                agree ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
               Đăng ký
             </button>
-
             {/* Chuyển sang đăng nhập */}
             <div className="text-center mt-3 text-sm text-gray-600">
               Đã có tài khoản?
@@ -369,6 +372,11 @@ const Home = () => {
           </div>
         </div>
       )}
+
+      {/* FOOTER */}
+      <footer className="bg-gray-800 text-white p-4 w-full text-center">
+        <p>&copy; 2025 SFARM. All rights reserved.</p>
+      </footer>
     </div>
   );
 };

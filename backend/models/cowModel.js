@@ -7,7 +7,7 @@ const CowSchema = new mongoose.Schema({
     breedCow: String,
     birthDateCow: Date,
     weightCow: Number,
-    genderCow: { type: String, enum: ['M', 'F'] },
+    genderCow: { type: String, enum: ['M', 'F', ''] },
     createdAt: { type: Date, default: Date.now }
 });
 
