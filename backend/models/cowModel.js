@@ -3,11 +3,13 @@ const Schema = mongoose.Schema;
 
 const CowSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    idCow: { type: String, required: true, unique: true },
     nameCow: { type: String, required: true },
     breedCow: String,
     birthDateCow: Date,
     weightCow: Number,
     genderCow: { type: String, enum: ['M', 'F', ''] },
+    statusCow: String,
     createdAt: { type: Date, default: Date.now }
 });
 

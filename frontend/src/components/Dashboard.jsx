@@ -29,6 +29,7 @@ const Dashboard = () => {
     const [birthDateCow, setBirthDateCow] = useState("");
     const [weightCow, setWeightCow] = useState("");
     const [genderCow, setGenderCow] = useState("");
+    const [statusCow, setStatusCow] = useState("");
     
     useEffect(() => {
         setOnSearch(false);
@@ -55,6 +56,7 @@ const Dashboard = () => {
                 birthDateCow: birthDateCow,    
                 weightCow: parseFloat(weightCow),
                 genderCow: genderCow,
+                statusCow: statusCow,
             };
             const res = await handleAddCow(newAnimal, accessToken, axiosJWT, dispatch, setError);
             if (res) {
@@ -63,6 +65,7 @@ const Dashboard = () => {
                 setBirthDateCow("");
                 setWeightCow("");
                 setGenderCow("");
+                setStatusCow("");
                 setSuccessful(true);
                 setError("");
             }
@@ -238,6 +241,18 @@ const Dashboard = () => {
                         <option value="M">Đực</option>
                         <option value="F">Cái</option>
                         </select>
+                    </div>
+
+                    {/* Trạng thái */}
+                    <div className="mt-3">
+                        <label className="font-medium text-gray-700">Trạng thái </label>
+                        <input
+                        value={statusCow}
+                        onChange={(e) => setStatusCow(e.target.value)}
+                        type="text"
+                        placeholder="Nhập trạng thái"
+                        className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
                     </div>
 
                     {/* Nút thêm */}

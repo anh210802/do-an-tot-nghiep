@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { EyeIcon } from '@heroicons/react/outline';
-import { handleGetAllCows } from "../api/handleCow.jsx";
+import { handleGetAllCows, handleDeleteCow } from "../api/handleCow.jsx";
+import { Icon } from "leaflet";
+import { BiWifi, BiWifiOff } from "react-icons/bi";
+import AnimalStatusCard from "./AnimalStatusCard";
 
 const calculateAge = (birthDateString) => {
     const birthDate = new Date(birthDateString);
@@ -24,6 +27,8 @@ const calculateAge = (birthDateString) => {
     }
     return age + " năm";
   };
+
+
   
 
 const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, setOnSearch }) => {
@@ -31,19 +36,23 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
     const [loading, setLoading] = useState(true);
     const [selectedAnimal, setSelectedAnimal] = useState(null);
     const [openFixInfoAnimal, setOpenFixInfoAnimal] = useState(false);
+    const [connectDevice, setConnectDevice] = useState(false);
+    const [activityStatus, setActivityStatus] = useState("Ăn");
 
     useEffect(() => {
         const fetchCows = async () => {
             const cows = await handleGetAllCows(accessToken, axiosJWT, dispatch);
             setAnimalList(cows || []);
             setLoading(false);
+            setConnectDevice(cows.length > 0); 
+            setActivityStatus(cows.length > 0 ? "Hoạt động" : "Ngủ");
         };
-
         fetchCows();
     }, [accessToken, axiosJWT, dispatch]);
 
     const filteredAnimals = animalList.filter((Cow) =>
         Cow.nameCow.toLowerCase().includes(searchTerm.toLowerCase())
+        || Cow.idCow.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleSelectAnimal = (animal) => {
@@ -53,7 +62,8 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
     };
 
     const handleDelete = () => {
-        const updatedList = animalList.filter((a) => a.id !== selectedAnimal.id);
+        const updatedList = animalList.filter((a) => a.idCow !== selectedAnimal.idCow);
+        handleDeleteCow(selectedAnimal.idCow, accessToken, axiosJWT, dispatch);
         setAnimalList(updatedList);
         setSelectedAnimal(null);
         setOnSearch(false);
@@ -69,11 +79,10 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                 <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden mb-4">
                     <thead>
                         <tr className="bg-sky-100">
+                            <th className="py-3 px-6 text-left font-semibold text-gray-700">STT</th>
+                            <th className="py-3 px-6 text-left font-semibold text-gray-700">ID</th>
                             <th className="py-3 px-6 text-left font-semibold text-gray-700">Tên</th>
-                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Giống</th>
-                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Tuổi</th>
-                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Cân nặng</th>
-                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Giới tính</th>
+                            <th className="py-3 px-6 text-left font-semibold text-gray-700">Trạng thái</th>
                             <th className="py-3 px-6 text-left font-semibold text-gray-700">Hành động</th>
                         </tr>
                     </thead>
@@ -85,21 +94,12 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                                 </td>
                             </tr>
                         ) : (
-                            filteredAnimals.map((animal) => (
+                            filteredAnimals.map((animal, index) => (
                                 <tr key={animal.id} className="border-b hover:bg-gray-50">
+                                    <td className="py-3 px-6">{index + 1}</td>
+                                    <td className="py-3 px-6">{animal.idCow}</td>
                                     <td className="py-3 px-6">{animal.nameCow}</td>
-                                    <td className="py-3 px-6">{animal.breedCow}</td>
-                                    <td className="py-3 px-6">
-                                        {animal.birthDateCow ? `${calculateAge(animal.birthDateCow)} tuổi` : ""}
-                                    </td>
-                                    <td className="py-3 px-6 text-center">{animal.weightCow}</td>
-                                    {animal.genderCow === "M" ? (
-                                        <td className="py-3 px-6 text-center">Đực</td>
-                                    ) : animal.genderCow === "F" ? (
-                                        <td className="py-3 px-6 text-center">Cái</td>  
-                                    ) : (
-                                        <td className="py-3 px-6 text-center"></td>
-                                    )}
+                                    <td className="py-3 px-6">{animal.statusCow}</td>
                                     <td className="py-3 px-6 text-center">
                                         <button
                                             className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -116,7 +116,7 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                 </table>
             ) : (
                 <div className="bg-white p-6 shadow-md rounded-lg">
-                    <div className="space-x-2 mb-4">
+                    <div className="space-x-2 mb-4 flex items-center gap-2 border-b pb-4">
                         <button
                             className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
                             onClick={() => {
@@ -131,7 +131,13 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                             className="bg-amber-500 text-white px-5 py-2 rounded-lg hover:bg-amber-600"
                             onClick={() => setOpenFixInfoAnimal(true)}
                         >
-                            Thay đổi
+                            Cập nhật thông tin
+                        </button>
+
+                        <button 
+                            className="bg-sky-800 text-white px-5 py-2 rounded-lg hover:bg-sky-900"
+                        >
+                            Đổi thiết bị
                         </button>
 
                         <button
@@ -144,21 +150,62 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
 
                     {selectedAnimal && (
                         <div>
-                            <h3 className="text-xl font-semibold mb-4">Thông tin động vật</h3>
-                            <ul className="space-y-2 text-lg font-semibold">
-                                <li>Tên: {selectedAnimal.nameCow}</li>
-                                <li>Giống: {selectedAnimal.breedCow}</li>
-                                <li>Tuổi: {selectedAnimal.ageCow}</li>
-                                <li>Hành động: {}</li>
-                                <li>ID thiết bị: {}</li>
-                                <li>
-                                    Pin thiết bị: {}
-                                    {parseInt() < 20 && (
-                                        <span className="ml-2 text-red-500">⚠️ Yếu</span>
-                                    )}
-                                </li>
-                                <li>Vị trí: {}</li>
-                            </ul>
+                            <h2 className="text-xl font-semibold mb-4 text-center">Thông tin động vật</h2>
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <table className="md:w-2/3 bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden">
+                                    <tbody>
+                                        <tr className="border-b hover:bg-gray-50">
+                                            <td className="py-3 px-6 font-semibold">Tên:</td>
+                                            <td className="py-3 px-6">{selectedAnimal.nameCow}</td>
+                                        </tr>
+                                        <tr className="border-b hover:bg-gray-50">
+                                            <td className="py-3 px-6 font-semibold">Giống:</td>
+                                            <td className="py-3 px-6">{selectedAnimal.breedCow}</td>
+                                        </tr>
+                                        <tr className="border-b hover:bg-gray-50">
+                                        <td className="py-3 px-6 font-semibold">Ngày sinh:</td>
+                                        <td className="py-3 px-6">
+                                            {selectedAnimal.birthDateCow &&
+                                            new Date(selectedAnimal.birthDateCow).toLocaleDateString('vi-VN')} - {calculateAge(selectedAnimal.birthDateCow)} tuổi 
+                                        </td>
+                                        </tr>
+                                        <tr className="border-b hover:bg-gray-50">
+                                            <td className="py-3 px-6 font-semibold">Giới tính:</td>
+                                            {selectedAnimal.genderCow === "M" ? (
+                                                <td className="py-3 px-6">Đực</td>
+                                            ) : selectedAnimal.genderCow === "F" ? (
+                                                <td className="py-3 px-6">Cái</td>
+                                            ) : (
+                                                <td className="py-3 px-6">Chưa có thông tin</td>
+                                            )}
+                                        </tr>
+                                        <tr className="border-b hover:bg-gray-50">
+                                            <td className="py-3 px-6 font-semibold">Trạng thái:</td>
+                                            <td className="py-3 px-6">{selectedAnimal.statusCow}</td>
+                                        </tr>   
+                                        <tr className="border-b hover:bg-gray-50">
+                                            <td className="py-3 px-6 font-semibold">Người tạo:</td>
+                                            <td className="py-3 px-6">{selectedAnimal.userId.name}</td>
+                                        </tr>
+                                        <tr className="border-b hover:bg-gray-50">
+                                            <td className="py-3 px-6 font-semibold">Ngày tạo:</td>
+                                            <td className="py-3 px-6">
+                                                {selectedAnimal.createdAt
+                                                ? new Date(selectedAnimal.createdAt).toLocaleDateString('vi-VN')
+                                                : 'Chưa có thông tin'}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div className="md:w-1/3 bg-white p-6 shadow-md rounded-lg overflow-hidden">
+                                    <AnimalStatusCard
+                                        connectDevice={connectDevice}
+                                        selectedAnimal={selectedAnimal}
+                                        activityStatus={activityStatus}
+                                        batteryPercent={80}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
 

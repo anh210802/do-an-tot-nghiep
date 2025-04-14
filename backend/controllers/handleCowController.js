@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { nanoid } = require('nanoid');
 const User = require('../models/userModel');
 const Cow = require('../models/cowModel');
 
@@ -6,14 +7,17 @@ const userController = {
     addCow: async (req, res) => {
         try {
             const userId = req.user.id; // Lấy ID người dùng từ middleware
-            const {nameCow, breedCow, birthDateCow, weightCow, genderCow} = req.body;
+            const {nameCow, breedCow, birthDateCow, weightCow, genderCow, statusCow} = req.body;
+            idCow = nanoid(8); 
             const newCow = await Cow.create({
+                idCow,
                 userId,
                 nameCow,
                 breedCow,
                 birthDateCow,
                 weightCow,
-                genderCow
+                genderCow, 
+                statusCow
             });
 
             return res.status(200).json({ message: 'Thêm động vật thành công', cow: newCow });
@@ -36,13 +40,18 @@ const userController = {
     deleteCow: async (req, res) => {
         try {
             const { cowId } = req.params;
-            await Cow.findByIdAndDelete(cowId);
+            const deletedCow = await Cow.findOneAndDelete({ idCow: cowId });
+    
+            if (!deletedCow) {
+                return res.status(404).json({ message: 'Không tìm thấy động vật để xóa' });
+            }
+    
             return res.status(200).json({ message: 'Xóa động vật thành công' });
         } catch (err) {
             console.error(err);
             return res.status(500).json({ message: 'Lỗi server' });
         }
-    },  
+    },    
 
     updateCow: async (req, res) => {
         try {

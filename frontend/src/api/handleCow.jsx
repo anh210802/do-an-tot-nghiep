@@ -1,7 +1,7 @@
 import {
     addCowStart, addCowSuccess, addCowFailure,
     getAllCowsFailure, getAllCowsStart, getAllCowsSuccess,
-
+    deleteCowStart, deleteCowSuccess, deleteCowFailure,
 } from "../redux/handleCowSlice.js";
 
 const API_URL = import.meta.env?.VITE_API_URL || "http://localhost:8080";
@@ -34,6 +34,20 @@ export const handleGetAllCows = async (accessToken, axiosJWT, dispatch) => {
     } catch (error) {
         dispatch(getAllCowsFailure());
         console.error("Get all cows error:", error.response?.data || error.message);
+    }
+}
+
+export const handleDeleteCow = async (id, accessToken, axiosJWT, dispatch) => {
+    dispatch(deleteCowStart());
+    try {
+        const res = await axiosJWT.delete(`${API_URL}/handle-cow/delete-cow/${id}`, {
+            headers: { token: `Bearer ${accessToken}` },
+        });
+        dispatch(deleteCowSuccess(res.data));
+        return res.data;
+    } catch (error) {
+        dispatch(deleteCowFailure());
+        console.error("Delete cow error:", error.response?.data || error.message);
     }
 }
 
