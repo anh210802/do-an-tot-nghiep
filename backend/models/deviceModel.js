@@ -3,9 +3,9 @@ const Schema = mongoose.Schema;
 
 const DeviceSchema = new mongoose.Schema({
     cowId: { type: mongoose.Schema.Types.ObjectId, ref: 'Cow' },
-    deviceType: { type: String, required: true },
-    serialNumber: { type: String, unique: true, required: true },
+    deviceID: { type: String, unique: true, required: true },
     status: { type: String, enum: ['connect', 'disconnect'] },
+    battery: { type: Number, default: 100 },
     installedAt: { type: Date, default: Date.now }
 });
 

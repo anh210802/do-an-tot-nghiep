@@ -7,6 +7,7 @@ const MongoStore = require("connect-mongo");
 const mqttService = require("./service/mqttService");
 const authRoutes = require("./routes/authRoutes");
 const handleCowRoutes = require("./routes/handleCowRoutes");
+const deviceRoutes = require("./routes/deviceRoutes");
 const cookieParser = require('cookie-parser');
 
 const HOST = process.env.HOST || "0.0.0.0";
@@ -51,6 +52,7 @@ app.use(cookieParser(
 // Định tuyến API
 app.use("/auth", authRoutes);
 app.use("/handle-cow", handleCowRoutes);
+app.use("/handle-device", deviceRoutes);
 
 // Khởi động HTTP Server
 app.listen(PORT, HOST, () => {

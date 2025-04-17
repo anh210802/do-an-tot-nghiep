@@ -10,6 +10,8 @@ const CowSchema = new mongoose.Schema({
     weightCow: Number,
     genderCow: { type: String, enum: ['M', 'F', ''] },
     statusCow: String,
+    haveDevice: { type: Boolean, default: false },
+    deviceId: { type: String, default: null },
     createdAt: { type: Date, default: Date.now }
 });
 
