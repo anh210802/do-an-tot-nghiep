@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { getAllCows } = require('../controllers/handleCowController');
 const Schema = mongoose.Schema;
 
 const UserSchema = new mongoose.Schema({
@@ -7,7 +8,7 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
     email: { type: String, unique: false, required: false },
     phone: String,
-    key: { type: String, unique: true, required: true },
+    gateways: [{ type: String }],
     createdAt: { type: Date, default: Date.now }
 });
 

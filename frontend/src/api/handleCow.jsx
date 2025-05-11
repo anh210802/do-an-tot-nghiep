@@ -51,4 +51,17 @@ export const handleDeleteCow = async (id, accessToken, axiosJWT, dispatch) => {
     }
 }
 
+export const handleUpdateCow = async (id, cow, accessToken, axiosJWT, dispatch) => {
+    dispatch(addCowStart());
+    try {
+        const res = await axiosJWT.put(`${API_URL}/handle-cow/update-cow/${id}`, cow, {
+            headers: { token: `Bearer ${accessToken}` },
+        });
+        dispatch(addCowSuccess(res.data));
+        return res.data;
+    } catch (error) {
+        dispatch(addCowFailure());
+        console.error("Update cow error:", error.response?.data || error.message);
+    }
+}
 

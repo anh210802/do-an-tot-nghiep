@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { EyeIcon } from '@heroicons/react/outline';
-import { handleGetAllCows, handleDeleteCow } from "../api/handleCow.jsx";
+import { handleGetAllCows, handleDeleteCow, handleUpdateCow } from "../api/handleCow.jsx";
 import { Icon } from "leaflet";
 import { BiWifi, BiWifiOff } from "react-icons/bi";
 import AnimalStatusCard from "./AnimalStatusCard";
 import { handleSetDevice, handleDeleteDevice } from "../api/handleDevice.jsx";
 
+
 const calculateAge = (birthDateString) => {
     const birthDate = new Date(birthDateString);
     const today = new Date();
+
+    if (birthDate > today) {
+        return 0;
+    }
   
     let age = today.getFullYear() - birthDate.getFullYear();
     let m = today.getMonth() - birthDate.getMonth();
@@ -29,42 +34,43 @@ const calculateAge = (birthDateString) => {
     return age + " năm";
   };
 
-
-  
-
 const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, setOnSearch }) => {
     const [animalList, setAnimalList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedAnimal, setSelectedAnimal] = useState(null);
     const [openFixInfoAnimal, setOpenFixInfoAnimal] = useState(false);
     const [connectDevice, setConnectDevice] = useState(true);
-    const [activityStatus, setActivityStatus] = useState("Ăn");
     const [openConnectDevice, setOpenConnectDevice] = useState(false);
     const [deviceID, setDeviceID] = useState(null);
     const [errMsgDevice, setErrMsgDevice] = useState(null);
+
+    const [newNameCow, setNewNameCow] = useState("");
+    const [newBreedCow, setNewBreedCow] = useState("");
+    const [newBirthDateCow, setNewBirthDateCow] = useState("");
+    const [newWeightCow, setNewWeightCow] = useState("");
+    const [newGenderCow, setNewGenderCow] = useState("");
+    const [newStatusCow, setNewStatusCow] = useState("");
 
     useEffect(() => {
         const fetchCows = async () => {
             const cows = await handleGetAllCows(accessToken, axiosJWT, dispatch);
             setAnimalList(cows || []);
             setLoading(false);
-            setConnectDevice(cows.length > 0); 
-            setActivityStatus(cows.length > 0 ? "Hoạt động" : "Ngủ");
-            if (selectedAnimal) {
-                setConnectDevice(selectedAnimal.haveDevice);
+            if (cows.length > 0 && !selectedAnimal) {
+                setSelectedAnimal(cows[0]);
+                setDeviceID(cows[0].deviceId || null);
             }
-            setDeviceID(cows.deviceId);
-            setErrMsgDevice(null);
-            setOpenConnectDevice(false);
-            setOpenFixInfoAnimal(false);
         };
         fetchCows();
     }, [accessToken, axiosJWT, dispatch, selectedAnimal]);
+    
 
-    const filteredAnimals = animalList.filter((Cow) =>
-        Cow.nameCow.toLowerCase().includes(searchTerm.toLowerCase())
-        || Cow.idCow.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredAnimals = useMemo(() => 
+        animalList.filter((Cow) =>
+          Cow.nameCow.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          Cow.idCow.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [animalList, searchTerm]);
+      
 
     const handleSelectAnimal = (animal) => {
         setSelectedAnimal(animal);
@@ -72,26 +78,36 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
         setOpenFixInfoAnimal(false);
     };
 
-    const handleDelete = () => {
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const handleDelete = async () => {
+        if (!selectedAnimal) return;
         if (window.confirm("Bạn có chắc chắn muốn xóa động vật này không?")) {
-            const updatedList = animalList.filter((a) => a.idCow !== selectedAnimal.idCow);
-            handleDeleteCow(selectedAnimal.idCow, accessToken, axiosJWT, dispatch);
+            setIsProcessing(true);
+            await handleDeleteCow(selectedAnimal.idCow, accessToken, axiosJWT, dispatch);
+            const updatedList = animalList.filter(a => a.idCow !== selectedAnimal.idCow);
             setAnimalList(updatedList);
             setSelectedAnimal(null);
             setOnSearch(false);
+            setIsProcessing(false);
         }
-    };    
+    };
+      
 
     if (loading) {
         return <div className="text-center">Đang tải dữ liệu...</div>;
     }
 
-    const fixconnectDevice = () => {
-        handleSetDevice(selectedAnimal.idCow, deviceID, accessToken, axiosJWT, dispatch, setErrMsgDevice);
-        setOpenConnectDevice(false);
-        setConnectDevice(true);
-        setSelectedAnimal(null);
-    }
+    const fixconnectDevice = async () => {
+        const id = selectedAnimal.idCow;
+        await handleSetDevice(id, deviceID, accessToken, axiosJWT, dispatch, setErrMsgDevice);
+        const cows = await handleGetAllCows(accessToken, axiosJWT, dispatch);
+        setAnimalList(cows || []);
+        const updated = cows.find(cow => cow.idCow === id);
+        if (updated) {
+            setSelectedAnimal(updated);
+        }
+    };
 
     const deleteDevice = () => {
         handleDeleteDevice(selectedAnimal.idCow, accessToken, axiosJWT, dispatch, setErrMsgDevice);
@@ -100,6 +116,31 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
         setSelectedAnimal(null);
         setDeviceID(null);
     }
+
+    const updateAnimal = async (animal) => {
+        try {
+            const newAnimal = {
+                nameCow: newNameCow || animal.nameCow,
+                breedCow: newBreedCow || animal.breedCow,
+                birthDateCow: newBirthDateCow || animal.birthDateCow,
+                weightCow: newWeightCow || animal.weightCow,
+                genderCow: newGenderCow || animal.genderCow,
+                statusCow: newStatusCow || animal.statusCow,
+            };
+    
+            const updatedAnimal = await handleUpdateCow(animal.idCow, newAnimal, accessToken, axiosJWT, dispatch);
+    
+            if (updatedAnimal) {
+                setAnimalList((prev) =>
+                    prev.map((a) => (a.idCow === updatedAnimal.idCow ? updatedAnimal : a))
+                );
+                setSelectedAnimal(updatedAnimal); // Cập nhật đúng dữ liệu từ server
+                setOpenFixInfoAnimal(false);
+            }
+        } catch (error) {
+            console.error("Error updating animal:", error);
+        }
+    };    
 
     return (
         <div>
@@ -182,7 +223,13 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                             Xóa
                         </button>
                     </div>
-
+                    {isProcessing && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                            <div className="bg-white p-6 rounded-lg shadow-md">
+                                <p className="text-lg">Đang xử lý...</p>
+                            </div>
+                        </div>
+                    )}
                     {selectedAnimal && (
                         <div>
                             <h2 className="text-xl font-semibold mb-4 text-center">Thông tin động vật</h2>
@@ -203,6 +250,10 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                                             {selectedAnimal.birthDateCow &&
                                             new Date(selectedAnimal.birthDateCow).toLocaleDateString('vi-VN')} - {calculateAge(selectedAnimal.birthDateCow)} tuổi 
                                         </td>
+                                        </tr>
+                                        <tr className="border-b hover:bg-gray-50">
+                                            <td className="py-3 px-6 font-semibold">Cân nặng:</td>
+                                            <td className="py-3 px-6">{selectedAnimal.weightCow} kg</td>
                                         </tr>
                                         <tr className="border-b hover:bg-gray-50">
                                             <td className="py-3 px-6 font-semibold">Giới tính:</td>
@@ -238,8 +289,7 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                                     <AnimalStatusCard
                                         connectDevice={connectDevice}
                                         selectedAnimal={selectedAnimal}
-                                        activityStatus={activityStatus}
-                                        batteryPercent={80}
+                                        batteryPercent={selectedAnimal.battery || 96}
                                     />
                                 </div>
                             </div>
@@ -258,6 +308,7 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                             placeholder="Tên động vật"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
                             defaultValue={selectedAnimal.nameCow}
+                            onChange={(e) => setNewNameCow(e.target.value)}
                             />
                         </div>
 
@@ -268,6 +319,7 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                             placeholder="Giống loài"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
                             defaultValue={selectedAnimal.breedCow}
+                            onChange={(e) => setNewBreedCow(e.target.value)}
                             />
                         </div>
 
@@ -277,6 +329,18 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                             type="date"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
                             defaultValue={selectedAnimal.birthDateCow}
+                            onChange={(e) => setNewBirthDateCow(e.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cân nặng</label>
+                            <input
+                            type="number"
+                            placeholder="Cân nặng (kg)"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                            defaultValue={selectedAnimal.weightCow}
+                            onChange={(e) => setNewWeightCow(e.target.value)}
                             />
                         </div>
 
@@ -285,6 +349,7 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                             <select
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
                             defaultValue={selectedAnimal.genderCow}
+                            onChange={(e) => setNewGenderCow(e.target.value)}
                             >
                             <option value="M">Đực</option>
                             <option value="F">Cái</option>
@@ -299,6 +364,7 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                             placeholder="Trạng thái"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
                             defaultValue={selectedAnimal.statusCow}
+                            onChange={(e) => setNewStatusCow(e.target.value)}
                             />
                         </div>
                         </form>
@@ -312,7 +378,7 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                         </button>
                         <button
                             className="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700"
-                            onClick={() => setOpenFixInfoAnimal(false)} // Có thể thay bằng hàm handleSave()
+                            onClick={() => updateAnimal(selectedAnimal)}
                         >
                             Lưu thay đổi
                         </button>
@@ -375,6 +441,7 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
             )}
         </div>
     );
+    
 };
 
 export default ListAnimal;

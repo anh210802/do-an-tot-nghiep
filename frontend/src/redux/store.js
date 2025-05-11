@@ -2,6 +2,8 @@ import {configureStore, combineReducers} from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import handleCowReducer from './handleCowSlice';
 import handleDeviceReducer from './handleDevice';
+import handleGatewayReducer from './handleGatewaySlice';
+
 import {
     persistStore,
     persistReducer,
@@ -24,6 +26,7 @@ const rootReducer = combineReducers({
     auth: authReducer,
     handleCow: handleCowReducer,
     handleDevice: handleDeviceReducer,
+    handleGateway: handleGatewayReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

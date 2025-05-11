@@ -5,10 +5,10 @@ import { handleLogout } from "../api/auth";
 import { createAxios } from "../createInstance";
 import { loginSuccess } from "../redux/authSlice";
 import { handleAddCow } from "../api/handleCow";
+import { handleSetGateway } from "../api/handleGateway"; // Import hàm thêm Gateway
 import Map from "./Map"; 
 import ListAnimal from "./ListAnimal";
-
-
+import Notification from './Notification';
 
 const Dashboard = () => {
     const request = useSelector((state) => state.auth.login?.currentUser);
@@ -30,6 +30,8 @@ const Dashboard = () => {
     const [weightCow, setWeightCow] = useState("");
     const [genderCow, setGenderCow] = useState("");
     const [statusCow, setStatusCow] = useState("");
+    const [openFormGateway, setOpenFormGateway] = useState(false);
+    const [gatewayId, setGatewayId] = useState("");
     
     useEffect(() => {
         setOnSearch(false);
@@ -76,6 +78,26 @@ const Dashboard = () => {
         }
     }
 
+    const addGateway = async () => {
+        setSuccessful(false);
+        if (!gatewayId) {
+            setError("ID Gateway không được để trống!");
+            return;
+        }
+        try {
+            const res = await handleSetGateway(gatewayId, accessToken, axiosJWT, dispatch, setError);
+            if (res) {
+                setGatewayId("");
+                setSuccessful(true);
+                setError("");
+            }
+        } catch (error) {
+            setSuccessful(false);
+            setError(error.message || "Thêm Gateway thất bại!");
+            console.error("Add gateway error:", error.message);
+        }
+    }
+
     return (
         <div className="flex flex-col min-h-screen bg-gray-100">
             {/* NAVIGATION */}
@@ -109,6 +131,8 @@ const Dashboard = () => {
             <header className="bg-sky-600 text-white text-3xl font-bold p-5 text-center">
                 Hệ thống giám sát hoạt động của động vật
             </header>
+            
+            <Notification /> {/* Thông báo từ WebSocket */}
 
             {/* SEARCH AND BUTTONS */}
             <div className="bg-white p-6 shadow-md rounded-xl mx-6 mt-6">
@@ -126,7 +150,15 @@ const Dashboard = () => {
                         <button 
                             className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-all"
                             onClick={() => setOpenFormAdd(true)}
-                        >Thêm động vật</button>
+                        >
+                            Thêm động vật
+                        </button>
+                        <button 
+                            className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-all"
+                            onClick={() => setOpenFormGateway(true)}
+                        >
+                            Thêm Gateway
+                        </button>
                     </div>
                 </div>
             </div>
@@ -278,8 +310,68 @@ const Dashboard = () => {
                 </div>
                 )}
 
+            {/*MODEL THÊM GATEWAY*/}
+            {openFormGateway && (
+                <div
+                    className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50"
+                    onClick={() => setOpenFormAdd(false)}
+                >
+                    <div
+                    className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setSuccessful(false);
+                    }}
+                    >
+                    <h2 className="text-xl font-bold text-center text-blue-600 mb-2">Thêm Gateway</h2>
+                    <p className="text-center text-gray-600 mb-4 text-sm">
+                        Vui lòng điền ID của Gateway.
+                    </p>
 
+                    {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-4 text-sm" role="alert">
+                        {error}
+                        </div>
+                    )}
 
+                    {!error && successful && (
+                        <div className="bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded mb-4 text-sm" role="alert">
+                        Thêm Gateway thành công!
+                        </div>
+                    )}
+
+                    <div>
+                        <input
+                        value={gatewayId}
+                        onChange={(e) => setGatewayId(e.target.value)}
+                        type="text"
+                        placeholder="Nhập ID của Gateway"
+                        className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    {/* Nút thêm */}
+                    <button
+                        onClick={addGateway}
+                        className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition duration-200"
+                    >
+                        Thêm
+                    </button>
+
+                    {/* Nút đóng */}
+                    <button
+                        onClick={() => {
+                        setOpenFormGateway(false);
+                        setError("");
+                        setSuccessful("");
+                        }}
+                        className="w-full mt-3 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg font-medium transition duration-200"
+                    >
+                        Đóng
+                    </button>
+                    </div>
+                </div>
+            )}
             {/* FOOTER */}
             <footer className="bg-gray-800 text-white p-6 text-center">
                 <p>&copy; 2025 SFARM. All rights reserved.</p>

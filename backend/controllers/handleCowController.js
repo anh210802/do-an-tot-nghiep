@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { nanoid } = require('nanoid');
 const User = require('../models/userModel');
 const Cow = require('../models/cowModel');
+const Device = require('../models/deviceModel');
 
 const userController = {
     addCow: async (req, res) => {
@@ -41,6 +42,7 @@ const userController = {
         try {
             const { cowId } = req.params;
             const deletedCow = await Cow.findOneAndDelete({ idCow: cowId });
+            const deletedDevice = await Device.deleteOne({ cowId: deletedCow._id });
     
             if (!deletedCow) {
                 return res.status(404).json({ message: 'Không tìm thấy động vật để xóa' });
@@ -55,17 +57,20 @@ const userController = {
 
     updateCow: async (req, res) => {
         try {
-            const { cowId } = req.params;
+            const { cowId } = req.params; // Đây là idCow, không phải _id
             const { nameCow, breedCow, birthDateCow, weightCow, genderCow } = req.body;
-            const updatedCow = await Cow.findByIdAndUpdate(cowId, {
-                nameCow,
-                breedCow,
-                birthDateCow,
-                weightCow,
-                genderCow
-            }, { new: true });
-
-            return res.status(200).json({ message: 'Cập nhật động vật thành công', cow: updatedCow });
+    
+            const updatedCow = await Cow.findOneAndUpdate(
+                { idCow: cowId }, // dùng idCow thay vì _id
+                { nameCow, breedCow, birthDateCow, weightCow, genderCow },
+                { new: true }
+            );
+    
+            if (!updatedCow) {
+                return res.status(404).json({ message: 'Không tìm thấy động vật' });
+            }
+    
+            return res.status(200).json(updatedCow); // không bọc trong { cow: ... }
         } catch (err) {
             console.error(err);
             return res.status(500).json({ message: 'Lỗi server' });
