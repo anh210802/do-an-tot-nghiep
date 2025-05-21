@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+.leaflet-container {
+    z-index: 0 !important;
+}
+
+.leaflet-control-layers {
+    z-index: 1000 !important;
+}
+.leaflet-control-layers-toggle {
+    z-index: 1000 !important;
+}
