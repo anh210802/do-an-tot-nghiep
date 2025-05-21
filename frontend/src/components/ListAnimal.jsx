@@ -313,7 +313,7 @@ const ListAnimal = ({ accessToken, axiosJWT, dispatch, onSearch, searchTerm, set
                                     <AnimalStatusCard
                                         connectDevice={connectDevice}
                                         selectedAnimal={selectedAnimal}
-                                        batteryPercent={selectedAnimal.battery || 96}
+                                        batteryPercent={selectedAnimal.battery || 80}
                                     />
                                 </div>
                             </div>
